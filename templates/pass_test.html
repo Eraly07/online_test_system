@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}{{ test.title }} - Тест тапсыру{% endblock %}
+
+{% block content %}
+<div id="testContainer">
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <h2><i class="fa-solid fa-file-pen"></i> {{ test.title }}</h2>
+        <p style="color: var(--text-muted);">{{ test.description or 'Сипаттамасы берілмеген.' }}</p>
+        <p style="margin-top: 0.5rem; font-weight: 500;">Сұрақтар саны: {{ test.questions | length }}</p>
+    </div>
+
+    <form id="submissionForm">
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            {% for question in test.questions %}
+                <div class="card question-card" id="q_box_{{ question.id }}" data-q_id="{{ question.id }}" style="padding: 1.5rem; transition: all 0.3s ease;">
+                    <h4 style="margin-bottom: 1rem;">{{ loop.index }}. {{ question.text }}</h4>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="question_{{ question.id }}" value="A" required>
+                            <span><b>A)</b> {{ question.option_a }}</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="question_{{ question.id }}" value="B">
+                            <span><b>B)</b> {{ question.option_b }}</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="question_{{ question.id }}" value="C">
+                            <span><b>C)</b> {{ question.option_c }}</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="question_{{ question.id }}" value="D">
+                            <span><b>D)</b> {{ question.option_d }}</span>
+                        </label>
+                    </div>
+                    <div class="correct-answer-feedback" style="display: none; margin-top: 1rem; font-weight: bold; color: var(--success-color);"></div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="btn" style="margin-top: 2rem; padding: 1rem;"><i class="fa-solid fa-flag-checkered"></i> Тестті аяқтау және нәтижені көру</button>
+    </form>
+</div>
+
+<div id="resultContainer" class="card" style="display: none; text-align: center; margin-top: 2rem; border: 2px solid var(--primary-color);">
+    <h2 id="resultTitle">Құттықтаймыз! 🎉</h2>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Сіз тестті сәтті аяқтадыңыз.</p>
+    
+    <div style="font-size: 3.5rem; font-weight: bold; color: var(--primary-color); margin-bottom: 1rem;" id="scorePercent">
+        0%
+    </div>
+    
+    <p style="font-size: 1.2rem; margin-bottom: 2rem;" id="scoreText">
+        Дұрыс жауаптар: 0-ден 0
+    </p>
+
+    <button type="button" class="btn btn-secondary" id="reviewBtn" style="width: auto; display: inline-block; margin-right: 1rem;"><i class="fa-solid fa-eye"></i> Қателермен жұмыс (Талдау)</button>
+    <a href="/dashboard" class="btn" style="width: auto; display: inline-block;"><i class="fa-solid fa-house"></i> Панельге қайту</a>
+</div>
+
+<script>
+    document.getElementById('submissionForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const questionCards = document.querySelectorAll('.question-card');
+        const answers = {};
+        
+        questionCards.forEach(card => {
+            const qId = card.getAttribute('data-q_id');
+            const selectedOpt = card.querySelector(`input[name="question_${qId}"]:checked`);
+            if (selectedOpt) {
+                answers[qId] = selectedOpt.value;
+            }
+        });
+
+        const response = await fetch(`/test/{{ test.id }}/submit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ answers: answers })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            
+            // Нәтижелерді толтыру
+            document.getElementById('scorePercent').innerText = result.percentage.toFixed(0) + '%';
+            document.getElementById('scoreText').innerText = `Дұрыс жауаптар саны: ${result.score} / ${result.total_questions}`;
+            
+            if (result.percentage < 50) {
+                document.getElementById('scorePercent').style.color = 'var(--error-color)';
+                document.getElementById('resultTitle').innerText = 'Тәжірибе жинау керек! 📚';
+            } else {
+                document.getElementById('scorePercent').style.color = 'var(--success-color)';
+                document.getElementById('resultTitle').innerText = 'Керемет нәтиже! 🌟';
+            }
+            
+            // Тестті жасырып, тек нәтижені көрсету
+            document.getElementById('testContainer').style.display = 'none';
+            document.getElementById('resultContainer').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // «Қателермен жұмыс» батырмасын басқанда сұрақтарды түспен көрсету
+            document.getElementById('reviewBtn').onclick = function() {
+                document.getElementById('resultContainer').style.display = 'none';
+                document.getElementById('testContainer').style.display = 'block';
+                // Формадағы батырманы жасыру
+                document.querySelector('#submissionForm button[type="submit"]').style.display = 'none';
+                
+                // Түстермен бояу логикасы (FastAPI-ден қайтқан дұрыс жауаптар болмағандықтан, таңдалғандарды бекіту)
+                questionCards.forEach(card => {
+                    const qId = card.getAttribute('data-q_id');
+                    const checkedRadio = card.querySelector(`input[name="question_${qId}"]:checked`);
+                    
+                    // Барлық радиоларды басылмайтындай ету (disabled)
+                    card.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = true);
+                    
+                    // Сәндік үшін шетін кішкене көк/сұр түспен белгілеп қою (Қарау режимі)
+                    card.style.border = "1px solid #cbd5e1";
+                    card.style.background = "#f8fafc";
+                });
+                
+                // Төменге бірден панельге қайтатын батырма қосу
+                if(!document.getElementById('backToDashBtn')) {
+                    const backBtn = document.createElement('a');
+                    backBtn.id = 'backToDashBtn';
+                    backBtn.href = '/dashboard';
+                    backBtn.className = 'btn';
+                    backBtn.style.marginTop = '2rem';
+                    backBtn.innerHTML = '<i class="fa-solid fa-house"></i> Талдауды аяқтау және Панельге қайту';
+                    document.getElementById('submissionForm').appendChild(backBtn);
+                }
+            };
+
+        } else {
+            alert('Жауаптарды жіберу кезінде қате кетті.');
+        }
+    });
+</script>
+{% endblock %}

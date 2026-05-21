@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Онлайн Тестілеу{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/" class="navbar-brand"><i class="fa-solid fa-graduation-cap"></i> TestSystem</a>
+        <div class="nav-links">
+            {% if user %}
+                <a href="/dashboard"><i class="fa-solid fa-house"></i> Басты бет</a>
+                <a href="/test/create"><i class="fa-solid fa-plus"></i> Тест жасау</a>
+                <a href="/logout" style="color: var(--error-color);"><i class="fa-solid fa-right-from-bracket"></i> Шығу ({{ user.username }})</a>
+            {% else %}
+                <a href="/login"><i class="fa-solid fa-right-to-bracket"></i> Кіру</a>
+                <a href="/register"><i class="fa-solid fa-user-plus"></i> Тіркелу</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+</body>
+</html>

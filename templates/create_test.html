@@ -1,0 +1,99 @@
+<!-- templates/create_test.html -->
+{% extends "base.html" %}
+
+{% block title %}Жаңа тест құру{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>🛠️ Жаңа тест және сұрақтар құру</h2>
+    <p style="color: var(--text-muted); margin-bottom: 2rem;">Тест атауын жазып, төмендегі батырма арқылы сұрақтар енгізіңіз.</p>
+
+    <form action="/test/create" method="post" id="testForm">
+        <!-- Тест мәліметтері -->
+        <div class="form-group">
+            <label for="title">Тест атауы</label>
+            <input type="text" id="title" name="title" class="form-control" placeholder="Мысалы: Python негіздері" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Қысқаша сипаттамасы</label>
+            <textarea id="description" name="description" class="form-control" rows="2" placeholder="Бұл тест кімдерге арналған..."></textarea>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;">
+        
+        <h3>Сұрақтар тізімі</h3>
+        <div id="questionsContainer" style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 1rem;">
+            <!-- Сұрақтар осы жерге JS арқылы қосылады -->
+        </div>
+
+        <button type="button" class="btn btn-secondary" id="addQuestionBtn" style="margin-top: 1rem; margin-bottom: 2rem;">
+            ➕ Сұрақ қосу
+        </button>
+
+        <button type="submit" class="btn">💾 Тестті толық сақтау</button>
+    </form>
+</div>
+
+<script>
+    let questionCount = 0;
+    const container = document.getElementById('questionsContainer');
+    const addBtn = document.getElementById('addQuestionBtn');
+
+    function addQuestion() {
+        questionCount++;
+        const qDiv = document.createElement('div');
+        qDiv.className = 'question-block';
+        qDiv.style = 'padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 8px; background: #fafafa; position: relative;';
+        
+        qDiv.innerHTML = `
+            <h4 style="margin-bottom: 1rem; color: var(--primary-color);">Сұрақ №${questionCount}</h4>
+            <div class="form-group">
+                <label>Сұрақ мәтіні</label>
+                <input type="text" name="q_text_${questionCount}" class="form-control" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label>A нұсқасы</label>
+                    <input type="text" name="q_a_${questionCount}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>B нұсқасы</label>
+                    <input type="text" name="q_b_${questionCount}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>C нұсқасы</label>
+                    <input type="text" name="q_c_${questionCount}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>D нұсқасы</label>
+                    <input type="text" name="q_d_${questionCount}" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label><b>Дұрыс жауап нұсқасы:</b></label>
+                <select name="q_correct_${questionCount}" class="form-control" style="width: auto; display: inline-block; margin-left: 1rem;" required>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                </select>
+            </div>
+        `;
+        container.appendChild(qDiv);
+    }
+
+    // Алғашқы бір сұрақты бірден шығарып қою
+    addQuestion();
+
+    addBtn.addEventListener('click', addQuestion);
+
+    // Форма жіберілер алдында жалпы сұрақ санын backend білуі үшін жасырын инпут қосамыз
+    document.getElementById('testForm').addEventListener('submit', function() {
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'total_questions_count';
+        hiddenInput.value = questionCount;
+        this.appendChild(hiddenInput);
+    });
+</script>
+{% endblock %}

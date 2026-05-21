@@ -1,0 +1,29 @@
+<!-- templates/register.html -->
+{% extends "base.html" %}
+
+{% block title %}Тіркелу{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 450px; margin: 3rem auto;">
+    <h2>Жүйеге тіркелу</h2>
+    
+    {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+
+    <form action="/register" method="post">
+        <div class="form-group">
+            <label for="username">Пайдаланушы аты (Username)</label>
+            <input type="text" id="username" name="username" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Құпия сөз</label>
+            <input type="password" id="password" name="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn">Тіркелу</button>
+    </form>
+    <p style="margin-top: 1rem; text-align: center; font-size: 0.9rem; color: var(--text-muted);">
+        Аккаунтыңыз бар ма? <a href="/login" style="color: var(--primary-color);">Кіру</a>
+    </p>
+</div>
+{% endblock %}
