@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./online_testing.db"
+SQLALCHEMY_DATABASE_URL = "postgresql+psycopg2://neondb_owner:npg_VHoy3w7zpXxN@ep-solitary-hall-alcyc7uk.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require"
 
 # SQLite үшін check_same_thread=False міндетті түрде керек (FastAPI көп ағынды болғандықтан)
 engine = create_engine(
